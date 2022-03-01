@@ -4,6 +4,7 @@ import com.example.appjwtrealemailauditing.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +22,7 @@ import java.util.Properties;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
+    @Lazy
     AuthService authService;
 
     @Override
@@ -28,6 +30,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         auth.userDetailsService(authService).passwordEncoder(passwordEncoder());
     }
 
+    @Bean
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
@@ -39,7 +42,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .httpBasic().disable()
                 .authorizeRequests()
-                .antMatchers("/api/auth/register", "/api/auth/verifyEmail").permitAll()
+                .antMatchers(
+                        "/api/auth/register",
+                        "/api/auth/verifyEmail",
+                        "/api/auth/login").permitAll()
                 .anyRequest().authenticated();
     }
 
@@ -54,7 +60,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         mailSender.setHost("smtp.gmail.com");
         mailSender.setPort(587);
         mailSender.setUsername("yulchiboy1997@gmail.com");
-        mailSender.setPassword("Your password");
+        mailSender.setPassword("Sanjar7175");
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");

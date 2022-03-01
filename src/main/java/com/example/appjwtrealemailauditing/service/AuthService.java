@@ -7,12 +7,14 @@ import com.example.appjwtrealemailauditing.payload.LoginDto;
 import com.example.appjwtrealemailauditing.payload.RegisterDto;
 import com.example.appjwtrealemailauditing.repository.RoleRepository;
 import com.example.appjwtrealemailauditing.repository.UserRepository;
+import com.example.appjwtrealemailauditing.security.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -38,8 +40,11 @@ public class AuthService implements UserDetailsService {
     @Autowired
     JavaMailSender javaMailSender;
 
-    //@Autowired
-    //AuthenticationManager authenticationManager;
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtProvider jwtProvider;
 
     public ApiResponse registerUser(RegisterDto registerDto) {
         boolean existsByEmail = userRepository.existsByEmail(registerDto.getEmail());
@@ -81,22 +86,28 @@ public class AuthService implements UserDetailsService {
             user.setEnabled(true);
             user.setEmailCode(null);
             userRepository.save(user);
-            return new ApiResponse("Checking succesfully", true);
+            return new ApiResponse("Checking successfully", true);
         }
         return new ApiResponse("Error", false);
     }
 
     public ApiResponse login(LoginDto loginDto) {
-        try {
-           // authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginDto.getUserName(), loginDto.getPassword()));
-        } catch(BadCredentialsException e) {
+        try{
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    loginDto.getUserName(),
+                    loginDto.getPassword()
+            ));
 
+            User user = (User) authentication.getPrincipal();
+            String token = jwtProvider.generateToken(user.getEmail(), user.getRoles());
+            return new ApiResponse("Successfully = " + token, true);
+        } catch (BadCredentialsException badCredentialsException) {
+            return new ApiResponse("Password or Email  error", false);
         }
-        return null;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("dont found"));
+        return userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("dont found" + username));
     }
 }
