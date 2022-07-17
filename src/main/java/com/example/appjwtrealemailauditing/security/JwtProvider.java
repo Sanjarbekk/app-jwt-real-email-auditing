@@ -8,23 +8,38 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.Set;
 
+
+import java.util.Date;
+
 @Component
 public class JwtProvider {
+    private static final long expireTime = 1000 * 60 * 60 * 24;
+    private static final String secretKey = "maxfiysuzhechkimbilmasin";
 
-    public static final long expireTime = 1000 * 60 * 60 * 24;
-    public static final String secretKey = "secretKey";
-
-    public String generateToken(String email, Set<Role> roles){
-        Date expireDate =  new Date(System.currentTimeMillis() + expireTime);
-        String token =
-                Jwts
+    public String generateToken(String username) {
+        Date expireDate = new Date(System.currentTimeMillis() + expireTime);
+        String token = Jwts
                 .builder()
-                .setSubject(email)
+                .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(expireDate)
-                .claim("roles", roles)
                 .signWith(SignatureAlgorithm.HS512, secretKey)
                 .compact();
         return token;
     }
+
+    public String getEmailFromToken(String token) {
+        try {
+            String email = Jwts
+                    .parser()
+                    .setSigningKey(secretKey)
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+            return email;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }

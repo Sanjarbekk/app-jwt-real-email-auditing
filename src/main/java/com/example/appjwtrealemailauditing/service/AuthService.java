@@ -9,6 +9,7 @@ import com.example.appjwtrealemailauditing.repository.RoleRepository;
 import com.example.appjwtrealemailauditing.repository.UserRepository;
 import com.example.appjwtrealemailauditing.security.JwtProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -43,7 +44,7 @@ public class AuthService implements UserDetailsService {
     @Autowired
     AuthenticationManager authenticationManager;
 
-    @Autowired
+    @Autowired @Lazy
     JwtProvider jwtProvider;
 
     public ApiResponse registerUser(RegisterDto registerDto) {
@@ -99,7 +100,7 @@ public class AuthService implements UserDetailsService {
             ));
 
             User user = (User) authentication.getPrincipal();
-            String token = jwtProvider.generateToken(user.getEmail(), user.getRoles());
+            String token = jwtProvider.generateToken(user.getEmail());
             return new ApiResponse("Successfully = " + token, true);
         } catch (BadCredentialsException badCredentialsException) {
             return new ApiResponse("Password or Email  error", false);
